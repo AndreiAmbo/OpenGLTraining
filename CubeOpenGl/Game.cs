@@ -1,4 +1,4 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -10,6 +10,7 @@ namespace CubeOpenGl
         private int vertexBufferHandle;
         private int shaderHandle;
         private int vertexArrayHandle;
+        private int indexBufferHandle;
 
         public Game(int width = 1280, int height = 768, string title = "Game")
             : base(GameWindowSettings.Default,
@@ -34,20 +35,30 @@ namespace CubeOpenGl
 
             float[] vertices =
             {
-                // first 3 = positions, next 4 = colors
-               0.0f, 0.5f,  0f, 1f, 0f, 0f, 1f, // vertex0
-               0.5f, -0.5f, 0f,  0f, 1f, 0f, 1f,// vertex1
-               -0.5f, -0.5f, 0f, 0f, 0f, 1f, 1f// vertex2
+               -0.5f, 0.5f,  0f, 1f, 0f, 0f, 1f,    // vertex0   // positions = 3 floats, color = 4 floats
+               0.5f, 0.5f, 0f,  0f, 1f, 0f, 1f,    // vertex1
+               0.5f, -0.5f, 0f, 0f, 0f, 1f, 1f,   // vertex2
+               -0.5f, -0.5f, 0f, 1f, 1f, 0f, 1f  // vertex3
+            };
+
+            int[] indices =
+            {
+                0, 1, 2,
+                0, 2, 3,
             };
 
 
             // Generate and bind the vertex buffer
             vertexBufferHandle = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
-
-            // Send data to graphics card
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            // Generate index buffer
+            indexBufferHandle = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferHandle);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(int), indices, BufferUsageHint.StreamDraw);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
 
 
             // Create and bind vertex array
@@ -107,6 +118,9 @@ namespace CubeOpenGl
             GL.BindVertexArray(0);
             GL.DeleteVertexArray(vertexArrayHandle);
 
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            GL.DeleteBuffer(indexBufferHandle);
+
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.DeleteBuffer(vertexBufferHandle);
 
@@ -135,7 +149,8 @@ namespace CubeOpenGl
             GL.UseProgram(shaderHandle);
 
             GL.BindVertexArray(vertexArrayHandle);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3); // here 3rd parameter count is the number of vertices
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferHandle);
+            GL.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
             base.OnRenderFrame(args);
