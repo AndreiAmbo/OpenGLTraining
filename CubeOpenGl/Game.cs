@@ -1,4 +1,4 @@
-﻿﻿using OpenTK.Graphics.OpenGL;
+﻿using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -23,14 +23,14 @@ namespace CubeOpenGl
                       API = ContextAPI.OpenGL,
                       Profile = ContextProfile.Core,
                       APIVersion = new Version(3, 3)
-                  }) 
+                  })
         {
             CenterWindow(new Vector2i(1280, 768));
         }
 
         protected override void OnLoad()
         {
-            this.IsVisible = true;
+            IsVisible = true;
             GL.ClearColor(new Color4(0.3f, 0.4f, 0.5f, 1f));
 
             float[] vertices =
@@ -47,38 +47,34 @@ namespace CubeOpenGl
                 0, 2, 3,
             };
 
+            GenerateAndBindVertexBuffer(vertices);
+            GenerateAndBindIndexBuffer(indices);
+            GenerateAndBindVertexArray();
+            SetupVertexAttributes();
+            HandleShaders();
 
-            // Generate and bind the vertex buffer
-            vertexBufferHandle = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            base.OnLoad();
+        }
 
-            // Generate index buffer
-            indexBufferHandle = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferHandle);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(int), indices, BufferUsageHint.StreamDraw);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-
-
-            // Create and bind vertex array
-            vertexArrayHandle = GL.GenVertexArray();
-            GL.BindVertexArray(vertexArrayHandle);
-
-
-            
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
-            // Indicates the positions
+        private static void SetupVertexAttributes()
+        {
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 7 * sizeof(float), 0);
-
-            //Indicates the colors
             GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 7 * sizeof(float), 3 * sizeof(float));
 
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
             GL.BindVertexArray(0);
+        }
 
-            // Create shaders
+        private void GenerateAndBindVertexArray()
+        {
+            vertexArrayHandle = GL.GenVertexArray();
+            GL.BindVertexArray(vertexArrayHandle);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
+        }
+
+        private void HandleShaders()
+        {
             string vertexShaderCode = File.ReadAllText("Shaders/shader.vertex");
             string fragmentShaderCode = File.ReadAllText("Shaders/shader.frag");
 
@@ -107,8 +103,22 @@ namespace CubeOpenGl
             // Delete Shaders
             GL.DeleteShader(vertexShaderHandle);
             GL.DeleteShader(fragmentShaderHandle);
+        }
 
-            base.OnLoad();
+        private void GenerateAndBindIndexBuffer(int[] indices)
+        {
+            indexBufferHandle = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBufferHandle);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(int), indices, BufferUsageHint.StreamDraw);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+        }
+
+        private void GenerateAndBindVertexBuffer(float[] vertices)
+        {
+            vertexBufferHandle = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferHandle);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
 
         protected override void OnUnload()
